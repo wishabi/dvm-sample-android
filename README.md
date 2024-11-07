@@ -18,12 +18,17 @@ features to allow users to interact with offers.
 ## Quick Start <a name="quick-start"></a>
 1. Clone this repo
 2. Open `dvm-sample-android` in Android Studio
-3. Add your `clientToken` provided by Flipp in `DvmApplication.kt`
-4. Add your JFrog credentials in `settings.gradle`
+3. Add your JFrog credentials in `settings.gradle.kts`
+4. Add your `clientToken` provided by Flipp in `DvmApplication.kt`
 5. Build and run the app
 
 ## How to Integrate the SDK <a name="how-to"></a>
-Begin by adding `maven` as a repository with the artifactory url and make sure to use your JFrog account credentials provided by Flipp.
+First, ensure you've added internet permissions to your `AndroidManifest.xml`
+```xml
+<uses-permission android:name="android.permission.INTERNET"/>
+```
+
+Then add `maven` as a repository source with the artifactory url below and fill in your JFrog account credentials provided by Flipp.
 ```kts
 repositories {
     maven {
@@ -50,7 +55,7 @@ implementation(libs.dvm.sdk)
 You'll also have to update your build.gradle
 ### Initializing the SDK
 In your application class begin by initializing the SDK. Here you will provide your `clientToken` provided by Flipp.  
-**Note**: this must be done before any other functionality of the SDK will work.
+**Note**: this must be done before any other functionality of the SDK will work - the SDK will throw an exception otherwise
 ```kotlin
 import com.flipp.dvm_sdk_android.external.DVMSDK
 import android.app.Application
@@ -66,7 +71,7 @@ class MyApplication : Application() {
     }
 }
 ```
-- If a new user beings using the app without restarting it, updating it in the `DvmSdk.config` object.
+- If a new user begins using the app without restarting (e.g logs out), then the user id can be assigned in the DvmSdk.config object
 ### Publication Repository
 - The dvm-sdk-android provides a `PublicationRepository` with one exposed method `getPublications` that you will use to get Publications
 ```kotlin
@@ -89,7 +94,7 @@ suspend fun getPublications(
 ```
 
 ### Rendering Publications
-A `FlippPublication` is a composable function that is used to render a `Publication`. It requires a Publication instance given by the `PublicationRepository`.
+A `FlippPublication` is a Jetpack Compose Composable function that is used to render a `Publication`. It requires a Publication instance given by the `PublicationRepository`.
 ```kotlin
 /**
  * A composable function that renders a Publication to the screen
