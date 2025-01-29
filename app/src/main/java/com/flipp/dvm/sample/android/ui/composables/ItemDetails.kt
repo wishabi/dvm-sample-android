@@ -40,7 +40,7 @@ import java.util.Locale
 
 /**
  * A composable showing the details of an offer in a card
- * Displays v1 and v2 pricing information
+ * Displays v2 pricing information
  *
  * @param modifier the modifier
  * @param name the name of the offer
@@ -69,7 +69,6 @@ fun ItemDetails(
     details: Details?,
 ) {
     val scrollState = rememberScrollState()
-    var showPayload by remember { mutableStateOf(false) }
 
     Column(modifier = modifier.padding(16.dp).verticalScroll(scrollState)) {
         if (images.size == 1) {
@@ -105,26 +104,7 @@ fun ItemDetails(
         id?.let {
             Text(it, style = Typography.bodySmall)
         }
-        Spacer(modifier = Modifier.height(16.dp))
-        Text("V1 Price Composition")
-        getV1PriceString(pricing, offerDetails).let {
-            Row {
-                Text(
-                    it,
-                    color = Color.Red,
-                    fontWeight = FontWeight.ExtraBold,
-                    style = Typography.titleLarge,
-                )
-                offerDetails?.postPriceText?.let {
-                    Text(" $it")
-                }
-            }
-        }
-        offerDetails?.saleStory?.let {
-            Text("V1 Sale Story: $it")
-        }
         Spacer(modifier = Modifier.height(8.dp))
-        Text("V2 Price Composition")
         getV2PriceMapping(pricing, offerDetails).let {
             val v2PriceText =
                 buildString {
@@ -146,8 +126,11 @@ fun ItemDetails(
                 }
             }
         }
-
-        Text("V2 Sale Story: ${getV2SaleStory(pricing, offerDetails, details)}")
+        getV2SaleStory(pricing, offerDetails, details).let {
+            if (it.isNotEmpty()) {
+                Text(it)
+            }
+        }
         Spacer(modifier = Modifier.height(16.dp))
         validFrom?.let { vf ->
             validTo?.let { vt ->
@@ -172,22 +155,6 @@ fun ItemDetails(
             Text("SKU: $it")
         }
         Spacer(modifier = Modifier.height(8.dp))
-    }
-}
-
-fun getV1PriceString(
-    pricing: Pricing?,
-    offerDetails: OfferDetails?,
-): String {
-    return buildString {
-        offerDetails?.prePriceText?.takeIf {
-            it.isNotEmpty()
-        }?.let {
-            append("$it ")
-        }
-        (pricing?.salePrice ?: pricing?.price)?.let {
-            append("$$it")
-        }
     }
 }
 
@@ -305,20 +272,9 @@ data class V2PriceMapping(
 @Composable
 @Preview
 fun ItemDetailsPreview() {
-    val img =
-        "https://flipp-image-retrieval.flipp.com/api/aHR0cDovL2Yud2lzaGFiaS5uZXQvcGFnZV9wZGZfaW1hZ2V" +
-            "zLzE5MzgzMTk3L2QzOTJkNDI0LTdkOTEtMTFlZi05MmM2LTBlZGM1M2MyNWVlNi94X2xhcmdl?Policy=eyJ" +
-            "TdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cHM6Ly9mbGlwcC1pbWFnZS1yZXRyaWV2YWwuZmxpcHAuY29t" +
-            "L2FwaS9hSFIwY0RvdkwyWXVkMmx6YUdGaWFTNXVaWFF2Y0dGblpWOXdaR1pmYVcxaFoyVnpMekU1TXpnek1Uaz" +
-            "NMMlF6T1RKa05ESTBMVGRrT1RFdE1URmxaaTA1TW1NMkxUQmxaR00xTTJNeU5XVmxOaTk0WDJ4aGNtZGw~KiIs" +
-            "IkNvbmRpdGlvbiI6eyJEYXRlTGVzc1RoYW4iOnsiQVdTOkVwb2NoVGltZSI6MTcyODkyNTYwOH19fV19&Signat" +
-            "ure=BXfrtMQ0rOar-bRTcWtM1n9GVvGRnlpRths4QYG5D4gYmkB8-StHWcc4oA85fr8fFtOU9zC8PLHvb0aHQwb" +
-            "WfGNX6auluKExFmHJ4c3uP~nQk-unTrb6eBN3v6KmtIBTs1~UoYVTFk0ikdWp6pwTAHtVIHNutomc-4Tl5kldyO" +
-            "AWHDSP11rgNi2QmmmrgF7pK2bdY5fvJqNTLkOfik3iOnwh4CZAEnvW51PbD~y0AV2kiGbFsj8t6t3w9vcUEC3qF" +
-            "aR6HNCLJ44ETqCogztHjVEETNsFzKQszmGRtI6eAlyoVemHd0aP7ynAhZWL~GwumI4I8XGDIU7Znbwb-4whEw__&Key-Pair-Id=KDIF3067XOLU0"
     ItemDetails(
         name = "FRESH GRADE A TURKEYS",
-        images = listOf<String>(img),
+        images = listOf<String>(""),
         id = "01J8ZBC550B9R8ZZZFD58C0TRT",
         pricing =
             Pricing(
