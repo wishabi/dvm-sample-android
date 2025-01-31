@@ -43,7 +43,7 @@ repositories {
 Then add it to your build configuration in `libs.version.toml` and `build.gradle.kts`
 ```toml
 [versions]
-dvmSdk = "1.0.0"  # latest version
+dvmSdk = "1.3.0"  # latest version
 
 [libraries]
 dvm-sdk = { module = "com.flipp:dvm-sdk", version.ref = "dvmSdk" }
