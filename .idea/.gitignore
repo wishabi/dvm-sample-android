@@ -1,3 +1,15 @@
 # Default ignored files
 /shelf/
 /workspace.xml
+/AndroidProjectSystem.xml
+/codeStyles/codeStyleConfig.xml
+/copilot.data.migration.agent.xml
+/copilot.data.migration.ask.xml
+/copilot.data.migration.ask2agent.xml
+/copilot.data.migration.edit.xml
+/ktfmt.xml
+/markdown.xml
+/material_theme_project_new.xml
+/codeStyles/Project.xml
+/inspectionProfiles/Project_Default.xml
+/runConfigurations.xml
