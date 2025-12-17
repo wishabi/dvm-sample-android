@@ -11,6 +11,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
@@ -19,6 +20,9 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.flipp.dvm.sample.android.ui.theme.Typography
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 /**
  * A card representing a Publication with all its information
@@ -40,8 +44,8 @@ fun PublicationCard(
     name: String?,
     publicationId: String,
     description: String?,
-    validFrom: String?,
-    validTo: String?,
+    validFrom: Date?,
+    validTo: Date?,
     onSfmlClick: (() -> Unit)?,
     onDvmClick: (() -> Unit)?,
 ) {
@@ -70,11 +74,14 @@ fun PublicationCard(
                 )
                 Text(text = description ?: "", style = Typography.bodySmall)
                 if (validFrom != null || validTo != null) {
+                    val dateFormat =
+                        remember { SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()) }
+
                     Text(
                         text =
                             buildString {
-                                validFrom?.let { append("Valid: ${it.take(10)} ") }
-                                validTo?.let { append("To: ${it.take(10)}") }
+                                validFrom?.let { append("Valid: ${dateFormat.format(it)} ") }
+                                validTo?.let { append("To: ${dateFormat.format(it)}") }
                             },
                         style = Typography.bodySmall,
                     )
@@ -106,8 +113,8 @@ fun PublicationCardPreview() {
         name = "Weekly Flyer - Valid Thursday, September 26 - Wednesday, October 2",
         description = "Weekly Flyer - Valid Thursday, September 26 - Wednesday, October 2 - LSL-2",
         publicationId = "01J91Y4TX5BBZ4ZVK6JKCYGPAA",
-        validFrom = "2024-09-26T04:00:00Z",
-        validTo = "2024-10-03T03:59:59Z",
+        validFrom = Date(),
+        validTo = Date(),
         onDvmClick = {},
         onSfmlClick = {},
     )

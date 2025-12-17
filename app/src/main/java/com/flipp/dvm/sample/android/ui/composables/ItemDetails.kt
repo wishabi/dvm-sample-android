@@ -36,6 +36,7 @@ import com.flipp.dvm.sdk.android.external.models.Pricing
 import kotlinx.serialization.json.JsonPrimitive
 import org.json.JSONObject
 import java.text.SimpleDateFormat
+import java.util.Date
 import java.util.Locale
 
 /**
@@ -60,8 +61,8 @@ fun ItemDetails(
     name: String?,
     images: List<String>,
     id: String?,
-    validFrom: String?,
-    validTo: String?,
+    validFrom: Date?,
+    validTo: Date?,
     description: String?,
     disclaimer: String?,
     offerDetails: OfferDetails?,
@@ -134,10 +135,9 @@ fun ItemDetails(
         Spacer(modifier = Modifier.height(16.dp))
         validFrom?.let { vf ->
             validTo?.let { vt ->
-                val format = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.getDefault())
                 val outputFormat = SimpleDateFormat("MMM dd, yyyy", Locale.getDefault())
-                val vff = format.parse(vf)?.let { outputFormat.format(it) } ?: ""
-                val vtf = format.parse(vt)?.let { outputFormat.format(it) } ?: ""
+                val vff = outputFormat.format(vf)
+                val vtf = outputFormat.format(vt)
                 Text("Valid: $vff - $vtf")
             }
         }
@@ -293,8 +293,8 @@ fun ItemDetailsPreview() {
                         Pair("sku", JsonPrimitive("20145891_KG")),
                     ),
             ),
-        validFrom = "2024-10-06T00:00:00Z",
-        validTo = "2024-10-09T00:00:00Z",
+        validFrom = Date(),
+        validTo = Date(),
         description = "ALL SIZES\\nAVAILABLE 5.49/KG",
         disclaimer = "DISCLAIMER",
     )
