@@ -5,12 +5,16 @@ import android.widget.Toast
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -30,8 +34,6 @@ import com.flipp.dvm.sdk.android.external.models.RenderType
  * @param modifier the modifier
  * @param identifiers values that uniquely identify a Publication
  * @param renderType the type of rendering method to use when displaying the publication
- * @param showDebugLabels whether to show debug labels or not
- * @param caching whether to cache the publication or not
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -52,11 +54,20 @@ fun PublicationScreen(
     val onTap = Toast.makeText(LocalContext.current, "DvmRendererDelegate: onTap", Toast.LENGTH_SHORT)
     val onTapError = Toast.makeText(LocalContext.current, "DvmRendererDelegate: onTapError", Toast.LENGTH_SHORT)
 
+    val hotSwapRenderType = rememberSaveable { mutableStateOf(renderType) }
+
     Column(modifier = modifier, horizontalAlignment = Alignment.CenterHorizontally) {
+        Button(onClick = {
+            if (hotSwapRenderType.value == RenderType.DVM) {
+                hotSwapRenderType.value = RenderType.SFML
+            } else {
+                hotSwapRenderType.value = RenderType.DVM
+            }
+        }) { Text("Toggle Render Type") }
         FlippPublication(
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier,
             identifiers = identifiers,
-            renderType = renderType,
+            renderType = hotSwapRenderType.value,
             delegate =
                 object : PublicationRendererDelegate {
                     override fun onFinishLoad() {
