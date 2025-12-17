@@ -23,6 +23,7 @@ import com.flipp.dvm.sample.android.MainViewModel
 import com.flipp.dvm.sample.android.ui.composables.ItemDetails
 import com.flipp.dvm.sdk.android.external.PublicationRendererDelegate
 import com.flipp.dvm.sdk.android.external.FlippPublication
+import com.flipp.dvm.sdk.android.external.PublicationController
 import com.flipp.dvm.sdk.android.external.PublicationError
 import com.flipp.dvm.sdk.android.external.PublicationIdentifiers
 import com.flipp.dvm.sdk.android.external.models.Offer
@@ -70,7 +71,10 @@ fun PublicationScreen(
             renderType = hotSwapRenderType.value,
             delegate =
                 object : PublicationRendererDelegate {
-                    override fun onFinishLoad() {
+                    override fun onFinishLoad(
+                        controller: PublicationController,
+                        legacyIdMap: Map<Long, String>?
+                    ) {
                         onFinishLoadToast.show()
                     }
 

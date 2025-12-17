@@ -1,5 +1,5 @@
 [versions]
-dvmSdk = "1.4.1"
+dvmSdk = "1.8.1"
 lifecycleViewmodelCompose = "2.8.6"
 navigationCompose = "2.8.2"
 coil = "2.7.0"
