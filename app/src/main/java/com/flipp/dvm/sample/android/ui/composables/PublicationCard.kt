@@ -79,10 +79,10 @@ fun PublicationCard(
 
                     Text(
                         text =
-                            buildString {
-                                validFrom?.let { append("Valid: ${dateFormat.format(it)} ") }
-                                validTo?.let { append("To: ${dateFormat.format(it)}") }
-                            },
+                        buildString {
+                            validFrom?.let { append("Valid: ${dateFormat.format(it)} ") }
+                            validTo?.let { append("To: ${dateFormat.format(it)}") }
+                        },
                         style = Typography.bodySmall,
                     )
                 }
