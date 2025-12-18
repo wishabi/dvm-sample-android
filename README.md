@@ -112,9 +112,10 @@ fun FlippPublication(
     renderType: RenderType,
 )
 ```
+
 ### Delegate Functions
-A delegate should also be provided which allows you to handle specific events related to the `Publication`.
-```kotlin
+A delegate should also be provided which allows you to handle specific events related to the Publication.
+```
 /**
  * Defines a delegate interface for handling Publication events
  *
@@ -122,8 +123,10 @@ A delegate should also be provided which allows you to handle specific events re
 interface PublicationRendererDelegate {
     /**
      * Gets called once the Publication successfully loads
+     * @param controller a controller to perform actions on the Publication
+     * @param legacyIdMap a map from the legacy flyerItemIds to the new globalIds for each item in the Publication
      */
-    fun onFinishLoad()
+    fun onFinishLoad(controller: PublicationController, legacyIdMap: Map<Long, String>?)
 
     /**
      * Gets called if there is an error loading the Publication.
@@ -143,5 +146,42 @@ interface PublicationRendererDelegate {
      * @param error a message describing the error
      */
     fun onTapError(error: String)
+
+    /**
+     * Gets called if the user long-pressing on an Offer from within a Publication.
+     * @param offer the [Offer] the user tapped on
+     */
+    fun onLongPress(offer: Offer)
+
+    /**
+     * Gets called if there was an error after long-pressing an Offer.
+     * Note: this function does not get called if the user long-taps on something other than an Offer
+     * @param error a message describing the error
+     */
+    fun onLongPressError(error: String)
+
+    /**
+     * Gets called when the user scrolls within the Publication.
+     * @param flyerHeightPx The height of the flyer in pixels.
+     * @param viewportBottomOffsetPx The offset from the bottom of the viewport.
+     */
+    fun onScroll(flyerHeightPx: Int, viewportBottomOffsetPx: Int)
+
+    /**
+     * Gets called after the host-app has requested a scroll-to action to occur and it is completed
+     * @param offer the offer of the item scrolled to if applicable
+     */
+    fun onScrollToFinished(offer: Offer?)
+
+    /**
+     * Gets called when the user sees more than 50% of an Offer on screen
+     * @param offers The the offers seen
+     */
+    fun onImpression(offers: List<String>)
+
+    /**
+     * Gets called when a user interacts with the publication or 6 seconds pass
+     */
+    fun onEngagedVisit()
 }
 ```
