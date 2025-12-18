@@ -115,7 +115,7 @@ fun FlippPublication(
 
 ### Delegate Functions
 A delegate should also be provided which allows you to handle specific events related to the Publication.
-```
+```kotlin
 /**
  * Defines a delegate interface for handling Publication events
  *
@@ -183,5 +183,51 @@ interface PublicationRendererDelegate {
      * Gets called when a user interacts with the publication or 6 seconds pass
      */
     fun onEngagedVisit()
+}
+```
+### Publication Controller
+A `PublicationController` is a way to perform actions on a `Publication`, it is provided in `PublicationDelegate.onFinishLoad`. 
+```kotlin
+/**
+ * Interface defining a set of publication actions.
+ */
+interface PublicationController {
+    /**
+     * Scrolls to an item given a [globalId].
+     * @param globalId The identifier of the item to scroll to.
+     */
+    fun scrollTo(globalId: String) = Unit
+
+    /**
+     * Registers a list of annotations to be used later.
+     * @param annotations The list of annotations to register.
+     */
+    fun registerAnnotations(annotations: List<Annotation>) = Unit
+
+    /**
+     * Adds annotations of a specific type to the given global IDs.
+     * @param type The type of the annotations.
+     * @param globalIds The set of global IDs to add the annotations to.
+     */
+    fun addAnnotations(
+        type: AnnotationType,
+        globalIds: Set<String>,
+    ) = Unit
+
+    /**
+     * Removes annotations of a specific type from the given global IDs.
+     * @param type The type of the annotations.
+     * @param globalIds The set of global IDs to remove the annotations from.
+     */
+    fun removeAnnotations(
+        type: AnnotationType,
+        globalIds: Set<String>,
+    ) = Unit
+
+    /**
+     * Notifies that the Publication is or is not visible - if so it resets the ev timer
+     * @param setVisibility True if the Publication is visible to the user
+     */
+    fun setVisibility(isVisible: Boolean) = Unit
 }
 ```
