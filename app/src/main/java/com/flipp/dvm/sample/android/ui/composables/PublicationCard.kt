@@ -34,6 +34,7 @@ import java.util.Locale
  * @param description the description of the Publication
  * @param validFrom the date the offer is valid from as a ISO-8601 string
  * @param validTo the date the offer is expires from as a ISO-8601 string
+ * @param tags the list of tags associated with the Publication
  * @param onSfmlClick called when the user clicks the SFML button
  * @param onDvmClick called when the user clicks the DVM button
  */
@@ -46,6 +47,7 @@ fun PublicationCard(
     description: String?,
     validFrom: Date?,
     validTo: Date?,
+    tags: List<String> = emptyList(),
     onSfmlClick: (() -> Unit)?,
     onDvmClick: (() -> Unit)?,
 ) {
@@ -86,6 +88,7 @@ fun PublicationCard(
                         style = Typography.bodySmall,
                     )
                 }
+                Text(text = "Tags: ${tags.joinToString(",")}", style = Typography.bodySmall)
             }
         }
         Row(

@@ -33,6 +33,7 @@ class MainViewModel : ViewModel() {
             publicationsRepository.getPublications(
                 merchantId = _merchantId.value,
                 storeCode = _storeCode.value,
+                language = "en"
             ).onSuccess {
                 _publicationListUiState.value =
                     if (it.publications.isNotEmpty()) {

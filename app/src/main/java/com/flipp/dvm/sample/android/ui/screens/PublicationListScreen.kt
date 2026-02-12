@@ -130,6 +130,7 @@ fun PublicationListScreen(
                         description = it.details.description,
                         validFrom = it.dates.validFrom,
                         validTo = it.dates.validTo,
+                        tags = it.tags,
                         onSfmlClick = sfmlClickHandler,
                         onDvmClick = dvmClickHandler,
                     )
