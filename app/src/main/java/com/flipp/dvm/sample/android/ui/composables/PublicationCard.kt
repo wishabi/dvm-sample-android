@@ -3,11 +3,15 @@ package com.flipp.dvm.sample.android.ui.composables
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -15,10 +19,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
+import com.flipp.content.v2.model.RenderingMetadataType
 import com.flipp.dvm.sample.android.ui.theme.Typography
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -35,8 +40,8 @@ import java.util.Locale
  * @param validFrom the date the offer is valid from as a ISO-8601 string
  * @param validTo the date the offer is expires from as a ISO-8601 string
  * @param tags the list of tags associated with the Publication
- * @param onSfmlClick called when the user clicks the SFML button
- * @param onDvmClick called when the user clicks the DVM button
+ * @param renderTypes the rendering types this Publication is available in
+ * @param onRenderTypeClick called with the rendering type the user chose to view
  */
 @Composable
 fun PublicationCard(
@@ -48,8 +53,8 @@ fun PublicationCard(
     validFrom: Date?,
     validTo: Date?,
     tags: List<String> = emptyList(),
-    onSfmlClick: (() -> Unit)?,
-    onDvmClick: (() -> Unit)?,
+    renderTypes: List<RenderingMetadataType>,
+    onRenderTypeClick: (RenderingMetadataType) -> Unit,
 ) {
     OutlinedCard(modifier = modifier.fillMaxWidth()) {
         Row(modifier = Modifier.padding(8.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -91,22 +96,40 @@ fun PublicationCard(
                 Text(text = "Tags: ${tags.joinToString(",")}", style = Typography.bodySmall)
             }
         }
-        Row(
-            modifier =
-                Modifier
-                    .padding(8.dp)
-                    .align(Alignment.CenterHorizontally),
-            horizontalArrangement = Arrangement.spacedBy(16.dp),
-        ) {
-            Button(enabled = onSfmlClick != null, onClick = onSfmlClick ?: {}) {
-                Text("View SFML", textAlign = TextAlign.Center)
-            }
-            Button(enabled = onDvmClick != null, onClick = onDvmClick ?: {}) {
-                Text("View DVM", textAlign = TextAlign.Center)
+        if (renderTypes.isNotEmpty()) {
+            @OptIn(ExperimentalLayoutApi::class)
+            FlowRow(
+                modifier =
+                    Modifier
+                        .padding(8.dp)
+                        .fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                renderTypes.forEach { renderType ->
+                    Button(
+                        onClick = { onRenderTypeClick(renderType) },
+                        contentPadding = ButtonDefaults.TextButtonContentPadding,
+                        modifier = Modifier.defaultMinSize(minWidth = 1.dp, minHeight = 1.dp),
+                    ) {
+                        Text(renderType.displayName(), fontSize = 12.sp)
+                    }
+                }
             }
         }
     }
 }
+
+/**
+ * A human-readable label for a rendering type
+ */
+fun RenderingMetadataType.displayName(): String =
+    when (this) {
+        RenderingMetadataType.SFML_VERTICAL -> "SFML Vertical"
+        RenderingMetadataType.SFML_HORIZONTAL -> "SFML Horizontal"
+        RenderingMetadataType.DVM_TEMPLATE -> "DVM Template"
+        RenderingMetadataType.DVM_STATIC -> "DVM Static"
+    }
 
 @Composable
 @Preview
@@ -118,7 +141,11 @@ fun PublicationCardPreview() {
         publicationId = "01J91Y4TX5BBZ4ZVK6JKCYGPAA",
         validFrom = Date(),
         validTo = Date(),
-        onDvmClick = {},
-        onSfmlClick = {},
+        renderTypes =
+            listOf(
+                RenderingMetadataType.DVM_TEMPLATE,
+                RenderingMetadataType.SFML_VERTICAL,
+            ),
+        onRenderTypeClick = {},
     )
 }

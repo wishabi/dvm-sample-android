@@ -16,11 +16,16 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
+
+        // The SDK itself (com.flipp:dvm-sdk).
+        // Credentials are read from ~/.gradle/gradle.properties so they are never committed:
+        //   artifactory_user=[PROVIDED BY FLIPP]
+        //   artifactory_password=[PROVIDED BY FLIPP]
         maven {
             url = uri("https://flipplib.jfrog.io/artifactory/dvm-sdk-android")
             credentials {
-                username = ""        // TODO: Artifactory username provided by Flipp
-                password = ""        // TODO: Artifactory password provided by Flipp
+                username = providers.gradleProperty("artifactory_user").orNull ?: ""
+                password = providers.gradleProperty("artifactory_password").orNull ?: ""
             }
         }
     }
@@ -28,4 +33,3 @@ dependencyResolutionManagement {
 
 rootProject.name = "DVM Sample"
 include(":app")
- 

@@ -2,17 +2,24 @@ package com.flipp.dvm.sample.android
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.flipp.dvm.sdk.android.external.PublicationRepository
-import com.flipp.dvm.sdk.android.external.models.Offer
-import com.flipp.dvm.sdk.android.external.models.Publication
+import com.flipp.content.v2.model.CorePublication
+import com.flipp.content.v2.model.Offer
+import com.flipp.content.v2.network.repository.PublicationRepository
+import com.flipp.dvm.sdk.android.external.DvmSdk
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 class MainViewModel : ViewModel() {
-    // Fetching and displaying publications
-    private val publicationsRepository = PublicationRepository()
-    private val _publicationListUiState: MutableStateFlow<UiState<Publication>> =
+    // Fetching and displaying publications. The repository comes from com.flipp:content, which the
+    // SDK exposes as part of its public API; point it at the SDK's configured curator endpoint.
+    private val publicationsRepository =
+        PublicationRepository(
+            authorization = DvmSdk.config.clientToken,
+            baseUrl = DvmSdk.config.endpoints.curator,
+        )
+
+    private val _publicationListUiState: MutableStateFlow<UiState<CorePublication>> =
         MutableStateFlow(UiState.Loading)
     val publicationListUiState get() = _publicationListUiState
 
@@ -30,26 +37,21 @@ class MainViewModel : ViewModel() {
     fun fetchPublications() {
         _publicationListUiState.value = UiState.Loading
         viewModelScope.launch {
-            publicationsRepository.getPublications(
-                merchantId = _merchantId.value,
-                storeCode = _storeCode.value,
-                language = "en"
-            ).onSuccess {
+            runCatching {
+                publicationsRepository.getPublicationsByStore(
+                    merchantId = _merchantId.value,
+                    storeCode = _storeCode.value,
+                    language = "en",
+                )
+            }.onSuccess { publications ->
                 _publicationListUiState.value =
-                    if (it.publications.isNotEmpty()) {
-                        UiState.Success(data = it.publications)
+                    if (publications.isNotEmpty()) {
+                        UiState.Success(data = publications)
                     } else {
                         UiState.Empty
                     }
             }.onFailure {
-                when (it) {
-                    is PublicationRepository.Companion.HttpNetworkException -> {
-                        _publicationListUiState.value = UiState.Failed(error = "${it.statusCode}: ${it.message}")
-                    }
-                    else -> {
-                        _publicationListUiState.value = UiState.Failed(error = "${it.message}")
-                    }
-                }
+                _publicationListUiState.value = UiState.Failed(error = "${it.message}")
             }
         }
     }
@@ -61,7 +63,6 @@ class MainViewModel : ViewModel() {
     fun onMerchantIdChanged(merchantId: String) {
         this._merchantId.value = merchantId.trim().filter { it.isDigit() }
     }
-
 }
 
 /**

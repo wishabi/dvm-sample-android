@@ -20,12 +20,12 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
+import com.flipp.content.v2.model.CorePublication
 import com.flipp.dvm.sample.android.UiState
 import com.flipp.dvm.sample.android.navigation.Routes
 import com.flipp.dvm.sample.android.ui.composables.PublicationCard
-import com.flipp.dvm.sdk.android.external.models.Publication
-import com.flipp.dvm.sdk.android.external.models.RenderType
 import com.flipp.dvm.sdk.android.external.toIdentifiers
+import java.util.Date
 
 /**
  * A composable function that displays a list of publications
@@ -38,7 +38,7 @@ import com.flipp.dvm.sdk.android.external.toIdentifiers
 @Composable
 fun PublicationListScreen(
     modifier: Modifier = Modifier,
-    uiState: UiState<Publication>,
+    uiState: UiState<CorePublication>,
     storeCode: String,
     navController: NavHostController = rememberNavController(),
 ) {
@@ -92,47 +92,26 @@ fun PublicationListScreen(
                         style = MaterialTheme.typography.labelLarge,
                     )
                 }
-                items(publications) {
-                    val sfmlClickHandler =
-                        if (it.renderingTypes.contains(RenderType.SFML)) {
-                            {
-                                navController.navigate(
-                                    Routes.PublicationScreen(
-                                        it.toIdentifiers(
-                                            storeCode,
-                                        ),
-                                        RenderType.SFML,
-                                    ),
-                                )
-                            }
-                        } else {
-                            null
-                        }
-                    val dvmClickHandler =
-                        if (it.renderingTypes.contains(RenderType.DVM)) {
-                            {
-                                navController.navigate(
-                                    Routes.PublicationScreen(
-                                        it.toIdentifiers(
-                                            storeCode,
-                                        ),
-                                        RenderType.DVM,
-                                    ),
-                                )
-                            }
-                        } else {
-                            null
-                        }
+                items(publications) { publication ->
                     PublicationCard(
-                        imageUrl = it.details.imageUrl,
-                        name = it.details.name,
-                        publicationId = it.globalId,
-                        description = it.details.description,
-                        validFrom = it.dates.validFrom,
-                        validTo = it.dates.validTo,
-                        tags = it.tags,
-                        onSfmlClick = sfmlClickHandler,
-                        onDvmClick = dvmClickHandler,
+                        imageUrl = publication.details.imageUrl,
+                        name = publication.details.name,
+                        publicationId = publication.globalId,
+                        description = publication.details.description,
+                        // v2 dates are epoch seconds
+                        validFrom = publication.dates.validFrom?.let { Date(it * 1000) },
+                        validTo = publication.dates.validTo?.let { Date(it * 1000) },
+                        tags = publication.tags,
+                        renderTypes = publication.renderingMetadataTypes,
+                        onRenderTypeClick = { renderType ->
+                            navController.navigate(
+                                Routes.PublicationScreen(
+                                    identifiers = publication.toIdentifiers(storeCode),
+                                    renderType = renderType.name,
+                                    language = publication.language,
+                                ),
+                            )
+                        },
                     )
                 }
             }

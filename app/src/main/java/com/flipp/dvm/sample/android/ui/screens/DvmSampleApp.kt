@@ -93,6 +93,7 @@ fun DvmSampleApp(
                 PublicationScreen(
                     identifiers = route.identifiers,
                     renderType = route.renderType,
+                    language = route.language,
                     viewModel = viewModel,
                 )
             }
