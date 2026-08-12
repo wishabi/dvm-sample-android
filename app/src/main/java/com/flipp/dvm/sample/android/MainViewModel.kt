@@ -24,11 +24,11 @@ class MainViewModel : ViewModel() {
     val publicationListUiState get() = _publicationListUiState
 
     // Merchant id via user input or map
-    private var _merchantId = MutableStateFlow("2018")
+    private var _merchantId = MutableStateFlow("")
     val merchantId get() = _merchantId.asStateFlow()
 
     // Store code via user input or map
-    private var _storeCode = MutableStateFlow("1174")
+    private var _storeCode = MutableStateFlow("")
     val storeCode get() = _storeCode.asStateFlow()
 
     // The selected offer in the Publication
