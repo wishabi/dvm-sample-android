@@ -26,14 +26,11 @@ arrives with the SDK. They are the types the SDK's API is expressed in.
 
 | Type | What it is |
 | --- | --- |
-| **Publication** | The digital flyer itself — the thing rendered on screen. It is a concept rather than a type you hold: you render one by passing a `PublicationIdentifiers` (either `Store` or `PostalCode`) to the `FlippPublication` composable. |
-| **`CorePublication`** | The *metadata* for one publication, returned by `PublicationRepository` — `globalId`, `merchantId`, `dates`, `details`, `language`, `tags`, and the `renderingMetadataTypes` it can be rendered as. Use it to build a browse or list screen, then call `toIdentifiers(storeCode)` to render the publication it describes. This was called `Publication` in 1.x. |
-| **`Offer`** | A purchasable deal inside a publication. Carries `pricing` (`OfferPricing`: price, sale price, percent/amount off, quantities, loyalty points), `offerDetails` (sale story, pre/post-price text, disclaimer), `details` (name, description, imagery), plus `products` and `dates`. Delivered to your delegate by `onTap(offer)`, `onLongPress(offer)` and `onScrollToFinished(offer)`. |
-| **`Promotion`** | A non-purchasable merchandising element inside a publication — a banner, a link, a call-out. Carries `details` and an `action` whose `ActionType` (`EXTERNAL_LINK`, `POPUP_URL`, `SECTION_LINK`, `SECTION_LABEL_LINK`, `CUSTOM_ACTION`, `NO_ACTION`) and `target` describe what activating it should do. Delivered by `onTap(promotion)` and `onScrollToFinished(promotion)`. |
+| **`CorePublication`** | The *metadata* for one publication. A Publication is what is rendered on screen, either in the traditional print format (SFML) or the new digital format (DVM). |
+| **`Offer`** | A purchasable deal inside a publication. Carries pricing information, product information, and other relevant data. |
+| **`Promotion`** | A non-purchasable merchandising element inside a publication — a banner, a link, a call-out. |
 
-Offers and Promotions both carry a `globalId`, which is the identifier the
-[Publication Controller](#publication-controller) uses to scroll to an item or to add and remove
-annotations on it.
+Entities such as CorePublications, Offers and Promotions all carry a `globalId`, which is their unique identifier among all the content.
 
 ## Quick Start <a name="quick-start"></a>
 1. Clone this repo
@@ -50,6 +47,8 @@ The SDK is built against JVM target 17 and its dependencies require `compileSdk 
 so the consuming module must use at least:
 
 ```kts
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+
 android {
     compileSdk = 36
 
@@ -69,17 +68,16 @@ kotlin {
 Your Kotlin version must be **2.2.20 or newer** — the SDK is compiled with 2.2.20, and older
 compilers reject its metadata.
 
+`compileSdk 36` also sets a floor on the build tooling: **AGP 8.9 or newer** and **Gradle
+8.11.1 or newer**. AGP 8.7 and earlier cannot compile against SDK 36 and will fail to resolve
+the SDK's dependencies.
+
 Ensure you've added internet permissions to your `AndroidManifest.xml`
 ```xml
 <uses-permission android:name="android.permission.INTERNET"/>
 ```
 
 ### Repository <a name="repository"></a>
-One repository is needed. Alongside the SDK it serves everything the SDK depends on that is
-not available publicly — `com.flipp:content` and the generated protobuf bindings content uses
-to talk to Flipp's backend. Everything else (androidx, Compose, okhttp, retrofit, protobuf,
-gson, kotlinx) comes from `google()` and `mavenCentral()`.
-
 Add the credentials provided by Flipp to `~/.gradle/gradle.properties` so they are never
 committed to source control:
 ```properties
@@ -119,12 +117,7 @@ dvm-sdk = { module = "com.flipp:dvm-sdk", version.ref = "dvmSdk" }
 implementation(libs.dvm.sdk)
 ```
 
-That is the only dependency you declare. `com.flipp:content` arrives transitively — its models
-(`Offer`, `Promotion`, `CorePublication`, ...) are the types the SDK's own API is expressed in,
-and it provides the `PublicationRepository` used to fetch the publication list, so you can
-import from `com.flipp.content.v2.*` without declaring it yourself.
-
-The protobuf artifacts that arrive transitively ship their `.proto` sources in both the Kotlin
+Some protobuf artifacts that arrive transitively ship their `.proto` sources in both the Kotlin
 and Java variants, so packaging needs a duplicate-resource rule:
 ```kts
 android {
@@ -162,7 +155,11 @@ class MyApplication : Application() {
 ### Fetching Publications
 The publication list is fetched with the `PublicationRepository` from `com.flipp:content`.
 Construct it with the client token and curator endpoint that the SDK resolved during
-initialization. Both methods are `suspend` and throw on failure.
+initialization.
+
+Both methods are `suspend`. Note that they do **not** throw — a network error, an invalid
+`clientToken` or any other failure comes back as an empty list, indistinguishable from a store
+that genuinely has no publications. Bear that in mind when deciding what to show the user.
 
 ```kotlin
 import com.flipp.content.v2.network.repository.PublicationRepository
@@ -173,7 +170,7 @@ private val publicationsRepository =
         baseUrl = DvmSdk.config.endpoints.curator,
     )
 
-// Publications for a known merchant + store
+// Fetch Publications for a known merchant + store
 val publications: List<CorePublication> =
     publicationsRepository.getPublicationsByStore(
         merchantId = merchantId,
@@ -181,7 +178,7 @@ val publications: List<CorePublication> =
         language = "en",
     )
 
-// Publications for a postal/ZIP code region
+// Fetch Publications for a postal/ZIP code region
 val publications: List<CorePublication> =
     publicationsRepository.getPublicationsByPostalCode(
         merchantId = merchantId,
@@ -301,7 +298,7 @@ interface PublicationRendererDelegate {
 ```
 
 ### Publication Controller
-A `PublicationController` is a way to perform actions on a `Publication`. It is provided in
+A `PublicationController` is a way to perform actions on a rendered Publication. It is provided in
 `PublicationRendererDelegate.onFinishLoad` and stays valid for the lifetime of that
 Publication.
 ```kotlin
@@ -328,6 +325,46 @@ interface PublicationController {
     fun setVisibility(isVisible: Boolean)
 }
 ```
+
+#### Annotations
+An `Annotation` is an image drawn on top of individual items in a rendered Publication.
+
+Define one with a `type` you choose, the image to draw, and the corner it anchors to. `width` and
+`height` are optional:
+
+```kotlin
+val circleAnnotation = Annotation(
+    type = "circleAnnotation",
+    imageUrl = "[YOUR IMAGE URL]",
+    position = AnnotationPosition.TOP_RIGHT,
+)
+```
+
+Register the definitions once the Publication has loaded, then apply them to items by `globalId`:
+
+```kotlin
+override fun onFinishLoad(
+    controller: PublicationController,
+    legacyIdMap: Map<Long, String>?,
+) {
+    controller.registerAnnotations(listOf(circleAnnotation))
+    controller.addAnnotations("circleAnnotation", listOf("id1", "id2", "id3"))
+    // you can also remove them with controller.removeAnnotations("circleAnnotation", listOf("id1", "id2", "id3"))
+}
+```
+
+A few things worth knowing:
+
+- Register per Publication. Every `FlippPublication` gets its own controller with no annotations
+  applied, so registration belongs in `onFinishLoad`.
+- You do not need to re-apply after a configuration change — the SDK re-registers and re-applies
+  everything itself when the page reloads.
+- The SDK does not persist annotations beyond the life of the Publication. Which items are clipped
+  is your app's state to store and re-apply on the next load.
+- More than one type can apply to the same item, so a "coupon" and a "clipped" badge can sit on
+  one Offer together.
+- `imageUrl` is loaded by the renderer, so it has to be reachable from the device rather than
+  bundled in your app.
 
 ## Upgrading from 1.x to 2.x <a name="upgrading"></a>
 2.0 was a breaking release. The main changes:
