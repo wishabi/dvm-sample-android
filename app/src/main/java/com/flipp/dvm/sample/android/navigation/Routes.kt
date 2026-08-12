@@ -3,7 +3,6 @@ package com.flipp.dvm.sample.android.navigation
 import android.os.Bundle
 import androidx.navigation.NavType
 import com.flipp.dvm.sdk.android.external.PublicationIdentifiers
-import com.flipp.dvm.sdk.android.external.models.RenderType
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 
@@ -24,10 +23,17 @@ sealed interface Routes {
      * Screen that displays the FlippPublication with additional debugging information
 
      * @property identifiers Contains values to uniquely identify the Publication to load
-     * @property renderType The method of rendering the Publication on screen
+     * @property renderType The name of the [com.flipp.content.v2.model.RenderingMetadataType] to
+     * render the Publication with. Passed as a String because navigation routes only carry types
+     * it knows how to serialize
+     * @property language The language code to render the Publication in, e.g en, fr
      */
     @Serializable
-    data class PublicationScreen(val identifiers: PublicationIdentifiers, val renderType: RenderType) {
+    data class PublicationScreen(
+        val identifiers: PublicationIdentifiers,
+        val renderType: String,
+        val language: String,
+    ) {
         companion object {
             /**
              * This is used to serialize and deserialize the object from the composable route

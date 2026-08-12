@@ -21,13 +21,15 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
+import com.flipp.content.v2.model.Details
+import com.flipp.content.v2.model.Offer
+import com.flipp.content.v2.model.OfferDetails
+import com.flipp.content.v2.model.OfferPricing
+import com.flipp.content.v2.model.OfferType
 import com.flipp.dvm.sample.android.ui.theme.Typography
-import com.flipp.dvm.sdk.android.external.models.Details
-import com.flipp.dvm.sdk.android.external.models.Offer
-import com.flipp.dvm.sdk.android.external.models.OfferDetails
-import com.flipp.dvm.sdk.android.external.models.OfferType
-import com.flipp.dvm.sdk.android.external.models.Pricing
 import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.contentOrNull
+import kotlinx.serialization.json.jsonPrimitive
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -59,7 +61,7 @@ fun ItemDetails(
     description: String?,
     disclaimer: String?,
     offerDetails: OfferDetails?,
-    pricing: Pricing?,
+    pricing: OfferPricing?,
     details: Details?,
 ) {
     val scrollState = rememberScrollState()
@@ -120,11 +122,6 @@ fun ItemDetails(
                 }
             }
         }
-        getV2SaleStory(pricing, offerDetails, details).let {
-            if (it.isNotEmpty()) {
-                Text(it)
-            }
-        }
         Spacer(modifier = Modifier.height(16.dp))
         validFrom?.let { vf ->
             validTo?.let { vt ->
@@ -144,71 +141,11 @@ fun ItemDetails(
             Text(it)
         }
         Spacer(modifier = Modifier.height(8.dp))
-        details?.additionalInfo?.get("sku")?.content?.let {
+        details?.additionalInfo?.get("sku")?.jsonPrimitive?.contentOrNull?.let {
             Text("SKU: $it")
         }
         Spacer(modifier = Modifier.height(8.dp))
     }
-}
-
-/**
- * Gets the v2 sale story of an [Offer]
- *
- * @param pricing the pricing information of the [Offer]
- * @param offerDetails the offer-details of the [Offer]
- * @param details the details of the [Offer]
- * @return the sale story
- */
-fun getV2SaleStory(
-    pricing: Pricing?,
-    offerDetails: OfferDetails?,
-    details: Details?,
-): String {
-    val labels = pricing?.labels
-    var saleStory = offerDetails?.saleStory ?: ""
-    val prePriceText = offerDetails?.prePriceText ?: ""
-
-    // Save labels
-    labels?.let {
-        if (it.contains("show-save")) saleStory = "SAVE $saleStory"
-    }
-
-    // Qualifying Quantity
-    if (pricing?.offerType == OfferType.BUY_X_GET_Y &&
-        pricing.percentOff != null &&
-        pricing.qualifyingQuantity != null &&
-        pricing.rewardQuantity != null
-    ) {
-        if (saleStory.isNotEmpty()) {
-            saleStory += " "
-        }
-        saleStory += "BUY ${pricing.qualifyingQuantity} GET ${pricing.rewardQuantity} ${pricing.percentOff}% OFF"
-    } else if (pricing?.qualifyingQuantity != null &&
-        !prePriceText.contains(Regex("Buy \\d+ Or More"))
-    ) {
-        if (saleStory.isNotEmpty()) {
-            saleStory += " "
-        }
-        saleStory += "WHEN YOU BUY ${pricing.qualifyingQuantity}"
-    }
-
-    // Loyalty
-    pricing?.loyaltyPoints?.let { loyaltyPoints ->
-        if (saleStory.isNotEmpty()) {
-            saleStory += ", "
-        }
-        saleStory += "PC Optimum $loyaltyPoints pts"
-        details?.additionalInfo?.get("loyalty_points_story")?.content?.let { loyaltyPointsStory ->
-            if (loyaltyPointsStory.isNotEmpty()) {
-                saleStory += " $loyaltyPointsStory"
-            }
-        }
-        details?.additionalInfo?.get("loyalty_points_value")?.content?.let { loyaltyValue ->
-            saleStory += ", $$loyaltyValue Value"
-        }
-    }
-
-    return saleStory
 }
 
 /**
@@ -219,7 +156,7 @@ fun getV2SaleStory(
  * @return the price mapping of the offer
  */
 fun getV2PriceMapping(
-    pricing: Pricing?,
+    pricing: OfferPricing?,
     offerDetails: OfferDetails?,
 ): V2PriceMapping {
     val prePriceText = offerDetails?.prePriceText ?: ""
@@ -270,8 +207,9 @@ fun ItemDetailsPreview() {
         images = listOf<String>(""),
         id = "01J8ZBC550B9R8ZZZFD58C0TRT",
         pricing =
-            Pricing(
-                price = 2.49,
+            OfferPricing(
+                price = 2.49f,
+                originalPriceEach = false,
             ),
         offerDetails =
             OfferDetails(
