@@ -122,11 +122,6 @@ fun ItemDetails(
                 }
             }
         }
-        getV2SaleStory(pricing, offerDetails, details).let {
-            if (it.isNotEmpty()) {
-                Text(it)
-            }
-        }
         Spacer(modifier = Modifier.height(16.dp))
         validFrom?.let { vf ->
             validTo?.let { vt ->
@@ -151,66 +146,6 @@ fun ItemDetails(
         }
         Spacer(modifier = Modifier.height(8.dp))
     }
-}
-
-/**
- * Gets the v2 sale story of an [Offer]
- *
- * @param pricing the pricing information of the [Offer]
- * @param offerDetails the offer-details of the [Offer]
- * @param details the details of the [Offer]
- * @return the sale story
- */
-fun getV2SaleStory(
-    pricing: OfferPricing?,
-    offerDetails: OfferDetails?,
-    details: Details?,
-): String {
-    val labels = pricing?.labels
-    var saleStory = offerDetails?.saleStory ?: ""
-    val prePriceText = offerDetails?.prePriceText ?: ""
-
-    // Save labels
-    labels?.let {
-        if (it.contains("show-save")) saleStory = "SAVE $saleStory"
-    }
-
-    // Qualifying Quantity
-    if (pricing?.offerType == OfferType.BUY_X_GET_Y &&
-        pricing.percentOff != null &&
-        pricing.qualifyingQuantity != null &&
-        pricing.rewardQuantity != null
-    ) {
-        if (saleStory.isNotEmpty()) {
-            saleStory += " "
-        }
-        saleStory += "BUY ${pricing.qualifyingQuantity} GET ${pricing.rewardQuantity} ${pricing.percentOff}% OFF"
-    } else if (pricing?.qualifyingQuantity != null &&
-        !prePriceText.contains(Regex("Buy \\d+ Or More"))
-    ) {
-        if (saleStory.isNotEmpty()) {
-            saleStory += " "
-        }
-        saleStory += "WHEN YOU BUY ${pricing.qualifyingQuantity}"
-    }
-
-    // Loyalty
-    pricing?.loyaltyPoints?.let { loyaltyPoints ->
-        if (saleStory.isNotEmpty()) {
-            saleStory += ", "
-        }
-        saleStory += "PC Optimum $loyaltyPoints pts"
-        details?.additionalInfo?.get("loyalty_points_story")?.jsonPrimitive?.contentOrNull?.let { loyaltyPointsStory ->
-            if (loyaltyPointsStory.isNotEmpty()) {
-                saleStory += " $loyaltyPointsStory"
-            }
-        }
-        details?.additionalInfo?.get("loyalty_points_value")?.jsonPrimitive?.contentOrNull?.let { loyaltyValue ->
-            saleStory += ", $$loyaltyValue Value"
-        }
-    }
-
-    return saleStory
 }
 
 /**
